@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: "Google Sans", Roboto, Arial, sans-serif;
+      font-size: 13px;
+      padding: 16px;
+      color: #202124;
+      background-color: #fff;
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 8px 0 12px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #202124;
+      background-color: #f1f3f4;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #e8eaed;
+    }
+
+    #loading {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #5f6368;
+    }
+
+    .spinner {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #5f6368;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.3);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 420px;
+    }
+
+    .modal-content h4 {
+      margin-top: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .modal-content label {
+      display: block;
+      margin: 12px 0 4px;
+      font-weight: 500;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      font-size: 13px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .modal-footer {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    .modal-footer button {
+      margin-left: 8px;
+    }
+
+    .link-help {
+      font-size: 12px;
+      color: #1a73e8;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .link-help:hover {
+      text-decoration: underline;
+    }
+
+    ol.token-steps {
+      font-size: 13px;
+      margin-left: 18px;
+    }
+
+    ol.token-steps li {
+      margin-bottom: 8px;
+    }
+
+    /* Floating Gear Button */
+    .settings-fab {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      padding: 6px 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      z-index: 1100;
+      transition: background 0.2s;
+    }
+
+    .settings-fab:hover {
+      background: #f1f3f4;
+    }
+
+    .settings-icon {
+      font-size: 16px;
+    }
+
+    .settings-label {
+      font-size: 12px;
+      color: #202124;
+    }
+    .text-button {
+  font-size: 12px;
+  padding: 6px 10px;
+  background-color: #f1f3f4;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  color: #202124;
+  cursor: pointer;
+  height: 32px;
+  white-space: nowrap;
+}
+
+.text-button:hover {
+  background-color: #e8eaed;
+}
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 16px;
+  right: 16px;
+  background-color: #323232;
+  color: #fff;
+  padding: 12px 16px;
+  font-size: 13px;
+  text-align: center;
+  border-radius: 4px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+#toast.success {
+  background-color: #188038;
+}
+
+#toast.error {
+  background-color: #d93025;
+}
+  </style>
+</head>
+<body>
+  <h3>PDF to Github Tool</h3>
+
+  <p>Download or Push to GitHub</p>
+  <button onclick="download()">Download PDF</button>
+  <button onclick="pushToGitHub()">Push to GitHub</button>
+
+  <div id="loading"></div>
+
+  <!-- Floating Settings -->
+  <div class="settings-fab" onclick="openSettings()" title="Open GitHub Settings">
+    <span class="settings-icon">⚙️</span>
+    <span class="settings-label">Settings</span>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <h4>GitHub Settings</h4>
+
+      <label>GitHub Token</label> <a href="#" onclick="openTokenHelp(); return false;" class="link-help">How do I get this?</a>
+<div style="display: flex; gap: 6px; align-items: center;">
+  <input type="password" id="tokenInput" placeholder="Paste your token" style="flex: 1;" />
+  <button id="testTokenBtn" class="text-button" onclick="testToken()">Test</button>
+</div>
+
+
+
+      <label>Repository (owner/repo)</label>
+      <input type="text" id="repoInput" placeholder="owner/repo" />
+
+      <label>Path in repo</label>
+      <input type="text" id="pathInput" placeholder="file/path.pdf" />
+
+      <div class="modal-footer">
+        <button onclick="closeSettings()">Cancel</button>
+        <button onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Token Help Modal -->
+  <div id="tokenHelpModal" class="modal">
+    <div class="modal-content">
+      <h4>How to Get a GitHub Token</h4>
+      <ol class="token-steps">
+        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></li>
+        <li>Click <b>"Generate new token (classic)"</b></li>
+        <li>Give it a name like <code>Slides Upload Tool</code></li>
+        <li>Select the <code>repo</code> scope ✅</li>
+        <li>Click <b>"Generate token"</b></li>
+        <li>Copy the token and paste it here (you won't see it again!)</li>
+      </ol>
+      <div class="modal-footer">
+        <button onclick="closeTokenHelp()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setLoading(message) {
+      document.getElementById('loading').innerHTML =
+        `<div><span class="spinner"></span>${message}</div>`;
+    }
+
+    function clearLoading() {
+      document.getElementById('loading').innerHTML = '';
+    }
+
+    function download() {
+      setLoading("Preparing PDF...");
+      google.script.run
+        .withSuccessHandler(url => {
+          clearLoading();
+          window.open(url, '_blank');
+        })
+        .getPdfDownloadUrl();
+    }
+
+function pushToGitHub() {
+  setLoading("Pushing to GitHub...");
+  google.script.run
+    .withSuccessHandler(result => {
+      clearLoading();
+      const type = result.success ? "success" : "error";
+      showToast(result.message, type);
+    })
+    .withFailureHandler(err => {
+      clearLoading();
+      showToast("Upload failed: " + err.message, "error");
+    })
+    .pushPdfToGitHub();
+}
+
+
+    function openSettings() {
+      document.getElementById("settingsModal").style.display = "block";
+    }
+
+    function closeSettings() {
+      document.getElementById("settingsModal").style.display = "none";
+    }
+
+    function openTokenHelp() {
+      document.getElementById("tokenHelpModal").style.display = "block";
+    }
+
+    function closeTokenHelp() {
+      document.getElementById("tokenHelpModal").style.display = "none";
+    }
+
+    function saveSettings() {
+      const token = document.getElementById("tokenInput").value;
+      const repo = document.getElementById("repoInput").value;
+      const path = document.getElementById("pathInput").value;
+
+      if (!token || !repo || !path) {
+        alert("All fields must be filled.");
+        return;
+      }
+
+      setLoading("Saving settings...");
+      google.script.run
+        .withSuccessHandler(() => {
+          clearLoading();
+          closeSettings();
+          alert("Settings saved!");
+        })
+        .withFailureHandler(err => {
+          clearLoading();
+          alert("Save failed: " + err.message);
+        })
+        .saveGitHubSettings(token, repo, path);
+    }
+
+    // Load existing values
+    google.script.run.withSuccessHandler(data => {
+      if (data.token) document.getElementById("tokenInput").value = data.token;
+      if (data.repo) document.getElementById("repoInput").value = data.repo;
+      if (data.path) document.getElementById("pathInput").value = data.path;
+    }).getGitHubSettings();
+
+    // Close modals if clicking background
+    window.onclick = function(event) {
+      const modals = ["settingsModal", "tokenHelpModal"];
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (event.target === modal) modal.style.display = "none";
+      });
+    };
+function testToken() {
+  const token = document.getElementById("tokenInput").value;
+  if (!token) {
+    showToast("Please enter a token to test.", "error");
+    return;
+  }
+
+  setLoading("Testing token...");
+  google.script.run
+    .withSuccessHandler(result => {
+      clearLoading();
+      if (result.success) {
+        showToast(`Token valid! Logged in as @${result.login}`, "success");
+      } else {
+        showToast(` ${result.message}`, "error");
+      }
+    })
+    .withFailureHandler(err => {
+      clearLoading();
+      showToast(" Error testing token: " + err.message, "error");
+    })
+    .testGitHubToken(token);
+}
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = type;
+  toast.style.display = "block";
+  setTimeout(() => {
+    toast.style.opacity = 1;
+  }, 10); // delay to allow transition
+
+  setTimeout(() => {
+    toast.style.opacity = 0;
+    setTimeout(() => {
+      toast.style.display = "none";
+      toast.className = "";
+    }, 300);
+  }, 3000); // hide after 3 seconds
+}
+  </script>
+  <div id="toast" style="display:none;"></div>
+</body>
+</html>
