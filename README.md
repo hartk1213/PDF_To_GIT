@@ -15,7 +15,7 @@ No publishing or add-on installation required — just copy and paste the script
 
 ---
 
-## 🛠 Installation Instructions
+## Installation Instructions
 
 ### 1. Open a Google Slides File
 
