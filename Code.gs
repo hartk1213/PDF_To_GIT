@@ -5,7 +5,6 @@ function onOpen() {
     .addToUi();
 }
 
-
 function showVersionSidebar() {
   const html = HtmlService.createHtmlOutputFromFile("Sidebar")
     .setTitle("Export Tools");
@@ -82,11 +81,12 @@ function pushPdfToGitHub() {
 
 
 
-function saveGitHubSettings(token, repo, path) {
+function saveAllSettings(token, repo, path) {
   const props = PropertiesService.getUserProperties();
   props.setProperty("GITHUB_TOKEN", token);
   props.setProperty("GITHUB_REPO", repo);
   props.setProperty("GITHUB_PATH", path);
+  return true;
 }
 
 function getGitHubSettings() {
