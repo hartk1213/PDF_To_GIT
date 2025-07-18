@@ -47,7 +47,7 @@ function pushPdfToGitHub() {
     const data = JSON.parse(getResp.getContentText());
     if (data && data.sha) sha = data.sha;
   } catch (e) {
-    // silently ignore - file may not exist yet
+    // ignore it , file could not exist yet
   }
 
   const payload = {
@@ -103,7 +103,7 @@ function testGitHubToken(token) {
       method: "get",
       muteHttpExceptions: true,
       headers: {
-        Authorization: "token " + token, // ✅ use "token" not "Bearer" for classic PATs
+        Authorization: "token " + token,
         Accept: "application/vnd.github.v3+json"
       }
     });
