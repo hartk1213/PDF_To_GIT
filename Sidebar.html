@@ -202,6 +202,25 @@
 #toast.error {
   background-color: #d93025;
 }
+.toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background-color: #323232;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.toast.success {
+  background-color: #4caf50;
+}
+.toast.error {
+  background-color: #e53935;
+}
   </style>
 </head>
 <body>
@@ -219,31 +238,33 @@
     <span class="settings-label">Settings</span>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-      <h4>GitHub Settings</h4>
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <h4>GitHub Settings</h4>
 
-      <label>GitHub Token</label> <a href="#" onclick="openTokenHelp(); return false;" class="link-help">How do I get this?</a>
-<div style="display: flex; gap: 6px; align-items: center;">
-  <input type="password" id="tokenInput" placeholder="Paste your token" style="flex: 1;" />
-  <button id="testTokenBtn" class="text-button" onclick="testToken()">Test</button>
-</div>
+    <label>GitHub Token</label>
+    <a href="#" onclick="openTokenHelp(); return false;" class="link-help">How do I get this?</a>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <input type="password" id="tokenInput" placeholder="Paste your token" style="flex: 1;" />
+      <button id="testTokenBtn" class="text-button" onclick="testToken()">Test</button>
+    </div>
 
+    <label>Repository (owner/repo)</label>
+    <input type="text" id="repoInput" placeholder="owner/repo" />
 
+    <label>Path in repo</label>
+    <input type="text" id="pathInput" placeholder="file/path.pdf" />
 
-      <label>Repository (owner/repo)</label>
-      <input type="text" id="repoInput" placeholder="owner/repo" />
+    <div id="modalLoading" style="margin-top: 12px; font-size: 13px; color: #5f6368;"></div>
 
-      <label>Path in repo</label>
-      <input type="text" id="pathInput" placeholder="file/path.pdf" />
-
-      <div class="modal-footer">
-        <button onclick="closeSettings()">Cancel</button>
-        <button onclick="saveSettings()">Save</button>
-      </div>
+    <div class="modal-footer">
+      <button onclick="closeSettings()">Cancel</button>
+      <button onclick="saveSettings()">Save</button>
     </div>
   </div>
+</div>
+
 
   <!-- GitHub Token Help Modal -->
   <div id="tokenHelpModal" class="modal">
@@ -264,14 +285,19 @@
   </div>
 
   <script>
-    function setLoading(message) {
-      document.getElementById('loading').innerHTML =
-        `<div><span class="spinner"></span>${message}</div>`;
-    }
+function setLoading(message, targetId = 'loading') {
+  const el = document.getElementById(targetId);
+  if (el) {
+    el.innerHTML = `<div><span class="spinner"></span>${message}</div>`;
+  }
+}
 
-    function clearLoading() {
-      document.getElementById('loading').innerHTML = '';
-    }
+function clearLoading(targetId = 'loading') {
+  const el = document.getElementById(targetId);
+  if (el) {
+    el.innerHTML = '';
+  }
+}
 
     function download() {
       setLoading("Preparing PDF...");
@@ -315,30 +341,46 @@ function pushToGitHub() {
       document.getElementById("tokenHelpModal").style.display = "none";
     }
 
-    function saveSettings() {
-      const token = document.getElementById("tokenInput").value;
-      const repo = document.getElementById("repoInput").value;
-      const path = document.getElementById("pathInput").value;
+function saveSettings() {
+  const token = document.getElementById("tokenInput").value.trim();
+  const repo = document.getElementById("repoInput").value.trim();
+  const path = document.getElementById("pathInput").value.trim();
 
-      if (!token || !repo || !path) {
-        alert("All fields must be filled.");
-        return;
-      }
+  if (!token || !repo || !path) {
+    showToast("Please fill in all fields.", "error");
+    return;
+  }
 
-      setLoading("Saving settings...");
-      google.script.run
-        .withSuccessHandler(() => {
-          clearLoading();
-          closeSettings();
-          alert("Settings saved!");
-        })
-        .withFailureHandler(err => {
-          clearLoading();
-          alert("Save failed: " + err.message);
-        })
-        .saveGitHubSettings(token, repo, path);
-    }
+  setLoading("Saving settings...", "modalLoading");
 
+  google.script.run
+   .withSuccessHandler(() => {
+  clearLoading();
+  showToast("Settings saved!", "success");
+
+  // Close the modal 1 second after toast shows
+  setTimeout(() => {
+    closeSettings();
+  }, 1000);
+})
+
+    .withFailureHandler(err => {
+      clearLoading("modalLoading");
+      showToast("Failed to save settings: " + err.message, "error");
+    })
+    .saveAllSettings(token, repo, path);
+}
+
+
+  function showToast(message, type) {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
     // Load existing values
     google.script.run.withSuccessHandler(data => {
       if (data.token) document.getElementById("tokenInput").value = data.token;
